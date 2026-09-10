@@ -28,14 +28,14 @@ try {
             exit
         }
     } else {
-        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - INSTALACE: Program nenalezen na lokalni stanici, instaluji novou verzi $serverVersion." | Out-File -FilePath $logFile -Append
-        $needsInstall = $true
+        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - SKIP: Program neni na lokalni stanici nainstalovan. Preskakuji, protoze skript bezi v rezimu 'pouze aktualizace'." | Out-File -FilePath $logFile -Append
+        $needsInstall = $false
     }
 
     # 4. Exekuce tiché instalace
     if ($needsInstall) {
         Start-Process -FilePath $installerPath -ArgumentList "/quiet /norestart" -Wait -NoNewWindow
-        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - HOTOVO: Instalacni proces uspesne dokoncen." | Out-File -FilePath $logFile -Append
+        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - HOTOVO: Aktualizacni proces uspesne dokoncen." | Out-File -FilePath $logFile -Append
     }
 
 } catch {
