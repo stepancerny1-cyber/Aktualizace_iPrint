@@ -1,0 +1,4 @@
+﻿# PowerShell
+*.log
+*.err
+.vscode/
