@@ -1,43 +1,28 @@
-﻿$installerPath = "\\axinetwork.loc\IT_Scripts$\Brother_iPrintScan_Update.exe"
-$logFile = "C:\ProgramData\Brother_iPrint_Deploy.log"
+﻿$logFile = "C:\ProgramData\Brother_iPrint_Deploy.log"
+"$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - Zacinam kontrolu Brother iPrint&Scan..." | Out-File -FilePath $logFile -Append
 
 try {
-    # 1. Validace zdrojového instalátoru na serveru
-    if (-not (Test-Path $installerPath)) {
-        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - CHYBA: Instalator nenalezen na serveru v ceste $installerPath." | Out-File -FilePath $logFile -Append
+    # 1. Nalezení Winget.exe v systému (nutné pro běh pod systémovým účtem)
+    $wingetPath = (Get-ChildItem -Path "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*_x64__8wekyb3d8bbwe\winget.exe" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+
+    if (-not $wingetPath) {
+        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - CHYBA: Winget.exe nebyl na tomto PC nalezen." | Out-File -FilePath $logFile -Append
         exit
     }
-    $serverVersion = [Version](Get-Item $installerPath).VersionInfo.FileVersion
 
-    # 2. Hledání nainstalované verze v registrech (32-bit i 64-bit architektura)
-    $registryPaths = @(
-        "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
-        "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    )
-    $installedApp = Get-ItemProperty $registryPaths -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -match "iPrint&Scan" }
+    # 2. Zjištění, zda je aplikace už nainstalována
+    $path64 = "C:\Program Files\Brother\iPrint&Scan\iPrint&Scan.exe"
+    $path32 = "C:\Program Files (x86)\Brother\iPrint&Scan\iPrint&Scan.exe"
 
-    $needsInstall = $false
-
-    # 3. Logika porovnání verzí a vyhodnocení stavu
-    if ($installedApp) {
-        $localVersion = [Version]$installedApp.DisplayVersion
-        if ($serverVersion -gt $localVersion) {
-            "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - UPDATE: Nalezena verze $localVersion, provadim update na verzi $serverVersion." | Out-File -FilePath $logFile -Append
-            $needsInstall = $true
-        } else {
-            # Verze je aktuální nebo novější, korektní ukončení procesu
-            exit
-        }
+    if ((Test-Path -LiteralPath $path64) -or (Test-Path -LiteralPath $path32)) {
+        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - Aplikace nalezena. Spoustim overeni aktualizaci pres Winget..." | Out-File -FilePath $logFile -Append
+        & $wingetPath upgrade --id Brother.iPrintScan --exact --silent --accept-package-agreements --accept-source-agreements *>&1 | Out-File -FilePath $logFile -Append
     } else {
-        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - INSTALACE: Program nenalezen na lokalni stanici, instaluji novou verzi $serverVersion." | Out-File -FilePath $logFile -Append
-        $needsInstall = $true
+        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - Aplikace nenalezena. Spoustim cistou instalaci pres Winget..." | Out-File -FilePath $logFile -Append
+        & $wingetPath install --id Brother.iPrintScan --exact --silent --accept-package-agreements --accept-source-agreements *>&1 | Out-File -FilePath $logFile -Append
     }
 
-    # 4. Exekuce tiché instalace
-    if ($needsInstall) {
-        Start-Process -FilePath $installerPath -ArgumentList "/quiet /norestart" -Wait -NoNewWindow
-        "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - HOTOVO: Instalacni proces uspesne dokoncen." | Out-File -FilePath $logFile -Append
-    }
+    "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - Operace uspesne ukoncena." | Out-File -FilePath $logFile -Append
 
 } catch {
     "$(Get-Date -f 'yyyy-MM-dd HH:mm:ss') - KRITICKA CHYBA: $$($_.Exception.Message)" | Out-File -FilePath $logFile -Append
