@@ -1,10 +1,10 @@
-﻿# AutoDownload-iPrint.ps1
+# AutoDownload-iPrint.ps1
 # Tento skript bezi ciste v PowerShellu, nevyzaduje aplikaci Winget.
 
 Start-Transcript -Path "C:\ProgramData\AutoDownload-iPrint.log" -Force
 Write-Host "Zahajuji kontrolu aktualizaci Brother iPrint&Scan..."
 
-$targetFile = "\\axinetwork.loc\SYSVOL\axinetwork.loc\scripts\Brother_iPrintScan_Update.exe"
+$targetFile = "\\herkules\public\Brother aktualizace\Brother_iPrintScan_Update.exe"
 
 try {
     # 0. Zjisteni aktualni verze v SYSVOLu

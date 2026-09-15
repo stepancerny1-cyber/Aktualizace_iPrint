@@ -1,4 +1,4 @@
-﻿$installerPath = "\\axinetwork.loc\SYSVOL\axinetwork.loc\scripts\Brother_iPrintScan_Update.exe"
+$installerPath = "\\herkules\public\Brother aktualizace\Brother_iPrintScan_Update.exe"
 $logFile = "C:\ProgramData\Brother_iPrint_Deploy.log"
 
 try {
