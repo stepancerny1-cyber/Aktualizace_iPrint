@@ -1,6 +1,5 @@
 ﻿# AutoDownload-iPrint.ps1
-# Tento skript bezi ciste v PowerShellu, nevyzaduje aplikaci Winget,
-# takze perfektne funguje i na Windows Serveru (jako je B-S-W-DC-01).
+# Tento skript bezi ciste v PowerShellu, nevyzaduje aplikaci Winget.
 
 Start-Transcript -Path "C:\ProgramData\AutoDownload-iPrint.log" -Force
 Write-Host "Zahajuji stahovani Brother iPrint&Scan..."
@@ -11,11 +10,11 @@ try {
     # 1. Zjisteni nejnovejsi verze z oficialniho Microsoft repozitare
     Write-Host "Pripojuji se k databazi Winget na GitHubu..."
     $apiUrl = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/b/Brother/iPrintScan"
-    # Windows Server 2019 muze potrebovat vynutit TLS 1.2
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     
     $response = Invoke-RestMethod -Uri $apiUrl
-    $latestVersion = ($response | Sort-Object name -Descending | Select-Object -First 1).name
+    # FIX: Korektni trideni jako verze [Version], ne jako text (jinak by 17.0.20 bylo "vyssi" nez 17.0.100)
+    $latestVersion = ($response.name | Sort-Object { [Version]($_ -replace '[^\d\.]', '') } -Descending | Select-Object -First 1)
     Write-Host "Nejnovejsi nalezena verze je: $latestVersion"
 
     # 2. Ziskani URL pro stazeni teto verze
